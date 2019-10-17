@@ -22,21 +22,17 @@ with nengo.Network() as model:
     ens_stim = bio.Ensemble(n_neurons=100, dimensions=1, p_exc=1)
     ens_golgi = bio.Ensemble(n_neurons=100, dimensions=A.shape[0], p_inh=1)
     ens_granule = bio.Ensemble(n_neurons=1000, dimensions=A.shape[0], p_exc=1)
-    ens_bias = bio.Ensemble(n_neurons=100, dimensions=1, p_inh=1,
-        encoders=np.ones((100, 1)),
-        intercepts=nengo.dists.Uniform(-0.9, -0.1),
-        eval_points=nengo.dists.Choice([np.zeros(1)]))
 
     tau=0.1
     AH = A * tau + np.eye(A.shape[0])
     BH = B * tau
     nengo.Connection(stim, ens_stim)
 
-    bio.Connection((ens_stim, ens_granule, ens_bias), ens_golgi,
+    bio.Connection((ens_stim, ens_granule, ens_golgi), ens_golgi,
         transform=np.concatenate((
             BH.reshape(-1, 1),
             AH,
-            np.zeros((AH.shape[0], 1))
+            np.zeros((AH.shape[0], AH.shape[0]))
         ), axis=1),
         synapse_exc=tau,
         synapse_inh=tau,
