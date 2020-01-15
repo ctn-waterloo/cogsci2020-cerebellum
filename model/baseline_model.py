@@ -21,14 +21,27 @@ def puff_func(t):
     else:
         return 0
 
-def tone_func(t):
-    if 2.8 > t % 3 > 2.7:
-        return 1
-    else:
-        return 0
+#experiment_type = "ucs_presence"
+experiment_type = "ucs_absence"
+
+if experiment_type == "ucs_presence":
+    def tone_func(t):
+        if 2.8 > t % 3 > 2.7:
+            return 1
+        else:
+            return 0
+elif experiment_type == "ucs_absence":
+    def tone_func(t):
+        if 3.0 > t % 3 > 2.7:
+            return 0                   # Silence (single missing tone)
+        else:
+            return (t % 0.25) < 0.0625 # Periodic tone
+else:
+    raise Exception("Invalid experiment type")
 
 model = nengo.Network()
 with model:
+
     ###########################################################################
     # Setup the conditioned stimulus (i.e., a tone) and the unconditioned     #
     # stimulus (i.e., a puff)                                                 #
@@ -38,8 +51,11 @@ with model:
 
 
     ###########################################################################
-    # Setup the reflex generator and the eye motor system                     #
+    # Setup the reflex generator and the eye-motor system                     #
     ###########################################################################
+
+    # The reflex pathway is across the Trigeminal nucleus in the brainstem;
+    # we don't model this in this particular model
 
     # Scaling factor that has to be applied to the reflex trajectory to scale
     # it to a range from 0 to 1
@@ -62,18 +78,19 @@ with model:
                      synapse=None)
 
     # Constantly open the eye a little bit
-    nd_eye_bias = nengo.Node(lambda _: 0.5)
+    nd_eye_bias = nengo.Node(lambda _: 1.5)
     nengo.Connection(nd_eye_bias, nd_eyelid[1])
 
     # We can't detect the puff if the eye is closed, multiply the output from
     # nd_puff with the amount the eye is opened. This is our unconditioned
     # stimulus
+    # NOTE: Currently disabled by commenting out the line below
     c0, c1 = nengo.Node(size_in=1), nengo.Node(size_in=1) # Only for GUI
     nd_us = nengo.Node(lambda t, x: x[0] * (1 - x[1]), size_in=2, size_out=1)
     nengo.Connection(nd_puff, nd_us[0], synapse=None)
     nengo.Connection(nd_eyelid, c0, synapse=None)
     nengo.Connection(c0, c1, synapse=None)
-    nengo.Connection(c1, nd_us[1], synapse=None)
+#    nengo.Connection(c1, nd_us[1], synapse=None)
 
     # Connect the unconditioned stimulus to the reflex generator
     nengo.Connection(nd_us, nd_reflex)
@@ -93,10 +110,22 @@ with model:
     ###########################################################################
 
     # Recurrent connection time constant
-    tau = 1.0
+    tau = 1.0 # This may be far too large!
+              # Need more neurons and smaller tau instead.
+
+    # Delay network window width
+    if experiment_type == "ucs_presence":
+        theta = 0.4
+    elif experiment_type == "ucs_absence":
+        theta = 1.0
+    else:
+        raise Exception("Invalid experiment type")
+
+    # Delay network dimensionality
+    q = 12
 
     # Create the LTI and transform it into the corresponding NEF LTI
-    A, B = make_lmu(q = 12, theta = 0.3)
+    A, B = make_lmu(q = q, theta = theta)
     Ap = A + tau * np.eye(A.shape[0])
     Bp = B * tau
 
@@ -111,6 +140,9 @@ with model:
     # input from the Interior Olive                                           #
     ###########################################################################
 
+    # This is the US pathway; the data is relayed from the Trigeminal nucleus
+    # to the Interior Olive.
+
     ens_cn = nengo.Ensemble(n_neurons=100, dimensions=1)
     ens_io = nengo.Ensemble(n_neurons=100, dimensions=1)
     ens_purkinje = nengo.Ensemble(n_neurons=100, dimensions=1)
@@ -121,9 +153,9 @@ with model:
 
     # Project from the 
     c_learn = nengo.Connection(
-        ens_granule.neurons, ens_purkinje.neurons,
-        transform=np.zeros((ens_purkinje.n_neurons, ens_granule.n_neurons)),
-        learning_rule_type=nengo.learning_rules.PES(learning_rate=3e-5))
+        ens_granule.neurons, ens_purkinje,
+        transform=np.zeros((ens_purkinje.dimensions, ens_granule.n_neurons)),
+        learning_rule_type=nengo.learning_rules.PES(learning_rate=1e-4))
     nengo.Connection(ens_io, c_learn.learning_rule)
 
     ###########################################################################
