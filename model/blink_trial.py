@@ -135,7 +135,7 @@ def add_labels(model, locals):
         
 
 
-class CerebellumTrial(pytry.PlotTrial):
+class BlinkTrial(pytry.PlotTrial):
     def params(self):
         self.param('time between trials', period=0.8)
         self.param('time between tone and puff', t_delay=0.1)
@@ -150,10 +150,11 @@ class CerebellumTrial(pytry.PlotTrial):
         self.param('tau for granule', tau=0.1)
         self.param('number of granule cells', n_granule=50)
         self.param('use cosine intercept distribution', use_cosine=True)
-        self.param('probe resolution', sample_every=0.005)
+        self.param('probe resolution', sample_every=0.001)
         self.param('tau for learning rule', tau_pre=0.2)
         self.param('tau for error feedback', tau_error=0.2)
-        
+        self.param('tau for purkinje output', tau_purkinje=0.01)
+        self.param('save data from plots', save_plot_data=True)
 
     def evaluate(self, p, plt):
         t_tone_start = 0.0
@@ -294,7 +295,7 @@ class CerebellumTrial(pytry.PlotTrial):
             p_nd_reflex_out = nengo.Probe(nd_reflex_out, sample_every=p.sample_every)
             if not p.do_minimal:
                 p_eyelid = nengo.Probe(nd_eyelid, sample_every=p.sample_every)
-            p_purkinje = nengo.Probe(ens_purkinje, synapse=0.03, sample_every=p.sample_every)
+            p_purkinje = nengo.Probe(ens_purkinje, synapse=p.tau_purkinje, sample_every=p.sample_every)
             p_granule = nengo.Probe(ens_granule, synapse=0.03, sample_every=p.sample_every)
             
         add_labels(model, locals=locals())
@@ -316,9 +317,14 @@ class CerebellumTrial(pytry.PlotTrial):
             t = np.arange(steps)*dt
             
             ax1 = plt.subplot(4, 1, 1)
+            ax1.set_ylabel('granule')
             ax2 = plt.subplot(4, 1, 2)
+            ax2.set_ylabel('purkinje')
             ax3 = plt.subplot(4, 1, 3)
+            ax3.set_ylabel('eye position\n(due to reflex)')
             ax4 = plt.subplot(4, 1, 4)
+            ax4.set_ylabel('eye position\n at puff start')
+            ax4.set_xlabel('trial')
             
             n_steps = len(sim.data[p_purkinje])
             cmap = matplotlib.cm.get_cmap("viridis")
@@ -333,9 +339,12 @@ class CerebellumTrial(pytry.PlotTrial):
             ax2b.plot(t, sim.data[p_nd_reflex_out][:steps], c='k', ls='--')
             
             ax4.plot(pos[int(t_puff_start/dt)])
-        
-        return dict(purkinje=sim.data[p_purkinje],
-                    granule=sim.data[p_granule][:steps],
-                    reflex=sim.data[p_nd_reflex_out][:steps],
-                    pos_at_puff_start=pos[int(t_puff_start/dt)],
-                   )
+
+        r = dict(final_pos=pos[int(t_puff_start/dt),-1],
+                 pos_at_puff_start=pos[int(t_puff_start/dt)],
+                 )
+        if p.save_plot_data:
+            r['purkinje']=sim.data[p_purkinje]
+            r['granule']=sim.data[p_granule][:steps]
+            r['reflex']=sim.data[p_nd_reflex_out][:steps]
+        return r
