@@ -3,6 +3,10 @@ import numpy as np
 import pytry
 import matplotlib
 
+import sys
+sys.path.append(".")
+from granule_golgi_circuit import GranuleGolgiCircuit
+
 import scipy.stats
 
 class EyeblinkReflex(nengo.Process):
@@ -155,6 +159,7 @@ class BlinkTrial(pytry.PlotTrial):
         self.param('tau for error feedback', tau_error=0.2)
         self.param('tau for purkinje output', tau_purkinje=0.01)
         self.param('save data from plots', save_plot_data=True)
+        self.param('granule golgi mode', mode='two_populations_dales_principle')
 
     def evaluate(self, p, plt):
         t_tone_start = 0.0
@@ -248,18 +253,18 @@ class BlinkTrial(pytry.PlotTrial):
             # Generate a LMU representation of the conditioned stimulus               #
             ###########################################################################
 
-            # Create the LTI and transform it into the corresponding NEF LTI
-            A, B = make_lmu(q = p.q, theta = p.theta)
-            Ap = p.tau*A + np.eye(A.shape[0])
-            Bp = B * p.tau
-
             # Build the LMU, feed the conditioned stimulus into it
-            # TODO: Replace with nengo-bio LMU
-            ens_granule = nengo.Ensemble(n_neurons=p.n_granule, dimensions=p.q,
-                                         intercepts=nengo.dists.CosineSimilarity(p.q+2) if p.use_cosine else nengo.dists.Uniform(-1,1),
-                                        )
-            nengo.Connection(ens_granule, ens_granule, transform=Ap, synapse=p.tau)
-            nengo.Connection(ens_pcn, ens_granule, transform=Bp, synapse=p.tau)
+            net_granule_golgi = GranuleGolgiCircuit(
+                ens_pcn,
+                tau=p.tau,
+                q=p.q,
+                theta=p.theta,
+                n_granule=p.n_granule,
+                n_golgi=p.n_granule // 10,
+                golgi_intercepts=nengo.dists.CosineSimilarity(p.q+2) if p.use_cosine else nengo.dists.Uniform(-1,1),
+                granule_intercepts=nengo.dists.CosineSimilarity(p.q+2) if p.use_cosine else nengo.dists.Uniform(-1,1),
+                mode=p.mode,
+            )
 
             ###########################################################################
             # Learn the connection from the Granule cells to the Purkinje cells via   #
@@ -279,8 +284,8 @@ class BlinkTrial(pytry.PlotTrial):
 
             # Project from the 
             c_learn = nengo.Connection(
-                ens_granule.neurons, ens_purkinje,
-                transform=np.zeros((ens_purkinje.dimensions, ens_granule.n_neurons)),
+                net_granule_golgi.ens_granule.neurons, ens_purkinje,
+                transform=np.zeros((ens_purkinje.dimensions, net_granule_golgi.ens_granule.n_neurons)),
                 learning_rule_type=nengo.learning_rules.PES(learning_rate=p.learning_rate, pre_synapse=p.tau_pre))
             nengo.Connection(ens_io, c_learn.learning_rule)
 
@@ -296,7 +301,7 @@ class BlinkTrial(pytry.PlotTrial):
             if not p.do_minimal:
                 p_eyelid = nengo.Probe(nd_eyelid, sample_every=p.sample_every)
             p_purkinje = nengo.Probe(ens_purkinje, synapse=p.tau_purkinje, sample_every=p.sample_every)
-            p_granule = nengo.Probe(ens_granule, synapse=0.03, sample_every=p.sample_every)
+            p_granule = nengo.Probe(net_granule_golgi.ens_granule, synapse=0.03, sample_every=p.sample_every)
             
         add_labels(model, locals=locals())
         
