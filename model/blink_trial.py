@@ -159,7 +159,7 @@ class BlinkTrial(pytry.PlotTrial):
         self.param('tau for error feedback', tau_error=0.2)
         self.param('tau for purkinje output', tau_purkinje=0.01)
         self.param('save data from plots', save_plot_data=True)
-        self.param('granule golgi mode', mode='two_populations_dales_principle')
+        self.param('granule golgi mode', mode='two_populations')
 
     def evaluate(self, p, plt):
         t_tone_start = 0.0

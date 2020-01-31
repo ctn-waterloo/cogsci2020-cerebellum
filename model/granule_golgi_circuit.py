@@ -243,7 +243,7 @@ class GranuleGolgiCircuit(nengo.Network):
                  granule_max_rates=None,
                  golgi_intercepts=None,
                  granule_intercepts=None,
-                 mode="two_populations_dales_principle"):
+                 mode="two_populations"):
 
         # Make sure the give mode is valid
         valid_modes = {
