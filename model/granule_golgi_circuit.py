@@ -158,8 +158,6 @@ class GranuleGolgiCircuit(nengo.Network):
             AH, BH = _make_nef_lti(
                 self.tau, *_make_delay_network(q=self.q, theta=self.theta))
 
-            self.nd_state = nengo.Node(size_in=self.q)
-
             # Make the recurrent connections
             if use_nengo_bio:
                 # Assemble the argments that are being passed to the solver
