@@ -1,0 +1,13 @@
+font.family: Nimbus Roman
+font.size: 9.0
+legend.fontsize: 9.0
+legend.frameon: False
+mathtext.fontset: stix
+axes.linewidth: 0.25
+axes.labelsize: 9.0
+axes.titlesize: 9.0
+axes.titleweight: bold
+xtick.labelsize: 9.0
+ytick.labelsize: 9.0
+hatch.linewidth: 0.5
+hatch.color: (0.5, 0.5, 0.5)
