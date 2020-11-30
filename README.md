@@ -1,4 +1,4 @@
-# Nengo Cerebellum
+# Nengo Cerebellum Model for CogSci 2020
 
 ![Poster](doc/stoeckel.2020a.png)
 
@@ -6,13 +6,13 @@
 
 Nengo model of the cerebellum presented as a poster at the 42nd Annual Meeting of the Cognitive Science Society, 2020 (CogSci).
 
-* **Link to the presentation video:**
+* **Link to the presentation video:**  
   https://www.youtube.com/watch?v=vynNYvTUAHo
 
-* **Link to the paper:** 
+* **Link to the paper:**  
   http://compneuro.uwaterloo.ca/files/publications/stoeckel.2020a.pdf
 
-* **Link to the poster:**
+* **Link to the poster:**  
   http://compneuro.uwaterloo.ca/files/publications/stoeckel.2020a.poster.pdf
 
 ## About the code
