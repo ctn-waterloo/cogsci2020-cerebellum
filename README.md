@@ -2,7 +2,7 @@
 
 ![Poster](doc/stoeckel.2020a.png)
 
-*Andreas Stöckel, Terry Stewart*
+*Andreas Stöckel, Terry Stewart, Chris Eliasmith*
 
 Nengo model of the cerebellum presented as a poster at the 42nd Annual Meeting of the Cognitive Science Society, 2020 (CogSci).
 
