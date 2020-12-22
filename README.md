@@ -1,6 +1,6 @@
 # Nengo Cerebellum Model for CogSci 2020
 
-![Poster](doc/stoeckel.2020a.png)
+![Poster](doc/stoeckel.2020a.poster.jpg)
 
 *Andreas Stöckel, Terry Stewart, Chris Eliasmith*
 
