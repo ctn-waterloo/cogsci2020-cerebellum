@@ -36,7 +36,8 @@ Now open the `notebooks/Plot - Results - Basic.ipynb` notebook; again, select `R
 Note that `pytry` does not sort the individual trials deterministically; you may have to select a different trial for the final plot (e.g. by replacing `data[1]` with `data[i]` where `i` is between zero and five).
 
 **Important:**  
-The experiment results are stored inside the temporary Docker container; once you close the container instance, any changes are most likely gone. You can try to convince Docker docker to mount a directory (comment out the `ADD` line in the `Dockerfile`; use `docker run -v "$PWD:/cogsci2020-cerebellum:rw,z" -p 4567:4567 -it cerebellum`) on the host machine, but I was not able to get this to work reliably with Jupyter lab due to file permission issues.
+The experiment results are stored inside the temporary Docker container; once you close the container instance, any changes to the temporary file system are inaccessible.
+You can try to convince Docker docker to mount a directory (comment out the `ADD` line in the `Dockerfile`; use `docker run -v "$PWD:/cogsci2020-cerebellum:rw,z" -p 4567:4567 -it cerebellum`) on the host machine, but I was not able to get this to work reliably with Jupyter lab due to file permission issues.
 
 ## Bibliography entry
 
